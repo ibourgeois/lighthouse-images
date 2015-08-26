@@ -9,4 +9,4 @@ WORKDIR /var/www/html
 COPY php-fpm.conf /usr/local/etc/
 
 EXPOSE 9000
-CMD ["php5-fpm -F"]
+CMD ["php5-fpm", "-F"]
