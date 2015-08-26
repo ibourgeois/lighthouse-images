@@ -4,6 +4,8 @@ MAINTAINER Derek Bourgeois <derek@ibourgeois.com>
 RUN apt-get update
 RUN apt-get upgrade -y
 
+# Install Perl for: 
+#   - ibourgeois/mysql
 RUN apt-get install -y perl --no-install-recommends 
 
 RUN rm -rf /var/lib/apt/lists/*
