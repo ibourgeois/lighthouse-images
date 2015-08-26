@@ -15,17 +15,7 @@ RUN for key in $GPG_KEYS; do \
 
 ENV PHP_VERSION 5.6.12
 
-RUN buildDeps=" \
-		$PHP_EXTRA_BUILD_DEPS \
-		libcurl4-openssl-dev \
-		libpcre3-dev \
-		libreadline6-dev \
-		librecode-dev \
-		libsqlite3-dev \
-		libssl-dev \
-		libxml2-dev \
-		xz-utils \
-	"
+RUN buildDeps="$PHP_EXTRA_BUILD_DEPS libcurl4-openssl-dev libpcre3-dev libreadline6-dev librecode-dev libsqlite3-dev libssl-dev libxml2-dev"
 RUN set -x
 RUN apt-get update
 RUN apt-get install -y $buildDeps --no-install-recommends
@@ -38,18 +28,7 @@ RUN mkdir -p /usr/src/php
 RUN tar -xof php.tar.xz -C /usr/src/php --strip-components=1
 RUN rm php.tar.xz*
 RUN cd /usr/src/php
-RUN ./configure \
-		--with-config-file-path="$PHP_INI_DIR" \
-		--with-config-file-scan-dir="$PHP_INI_DIR/conf.d" \
-		$PHP_EXTRA_CONFIGURE_ARGS \
-		--disable-cgi \
-		--enable-mysqlnd \
-		--with-curl \
-		--with-openssl \
-		--with-pcre \
-		--with-readline \
-		--with-recode \
-		--with-zlib
+RUN ./configure --with-config-file-path="$PHP_INI_DIR" --with-config-file-scan-dir="$PHP_INI_DIR/conf.d" $PHP_EXTRA_CONFIGURE_ARGS --disable-cgi --enable-mysqlnd --with-curl --with-openssl --with-pcre --with-readline --with-recode --with-zlib
 RUN make -j"$(nproc)"
 RUN make install
 RUN { find /usr/local/bin /usr/local/sbin -type f -executable -exec strip --strip-all '{}' + || true; }
