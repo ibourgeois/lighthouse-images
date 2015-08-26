@@ -7,19 +7,16 @@ RUN apt-get -y upgrade
 RUN echo "LC_ALL=en_US.UTF-8" >> /etc/default/locale
 RUN locale-gen en_US.UTF-8
 
-RUN apt-get install -y software-properties-common curl wget
+RUN apt-get install -y software-properties-common curl wget nano
 
 RUN apt-add-repository ppa:nginx/stable -y
 RUN apt-add-repository ppa:rwky/redis -y
 RUN apt-add-repository ppa:ondrej/php5-5.6 -y
 
-RUN wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
-RUN sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ trusty-pgdg main" >> /etc/apt/sources.list.d/postgresql.list'
+RUN curl -s https://packagecloud.io/gpg.key | apt-key add -
+RUN echo "deb http://packages.blackfire.io/debian any main" | tee /etc/apt/sources.list.d/blackfire.list
 
-RUN curl -s https://packagecloud.io/gpg.key | sudo apt-key add -
-RUN echo "deb http://packages.blackfire.io/debian any main" | sudo tee /etc/apt/sources.list.d/blackfire.list
-
-RUN curl --silent --location https://deb.nodesource.com/setup_0.12 | sudo bash -
+RUN curl --silent --location https://deb.nodesource.com/setup_0.12 | bash -
 
 RUN apt-get update
 
@@ -44,11 +41,9 @@ RUN ln -s /etc/php5/mods-available/mailparse.ini /etc/php5/cli/conf.d/20-mailpar
 RUN curl -sS https://getcomposer.org/installer | php
 RUN mv composer.phar /usr/local/bin/composer
 
-RUN printf "\nPATH=\"/home/vagrant/.composer/vendor/bin:\$PATH\"\n" | tee -a /home/vagrant/.profile
+RUN printf "\nPATH=\"/home/lighthouse/.composer/vendor/bin:\$PATH\"\n" | tee -a /home/lighthouse/.profile
 
-RUN sudo su vagrant <<'EOF'
-/usr/local/bin/composer global require "laravel/envoy=~1.0" \
-EOF
+RUN /usr/local/bin/composer global require "laravel/envoy=~1.0"
 
 RUN sed -i "s/error_reporting = .*/error_reporting = E_ALL/" /etc/php5/cli/php.ini
 RUN sed -i "s/display_errors = .*/display_errors = On/" /etc/php5/cli/php.ini
@@ -67,7 +62,7 @@ RUN apt-get update
 RUN apt-get install -y hhvm
 
 RUN service hhvm stop
-RUN sed -i 's/#RUN_AS_USER="www-data"/RUN_AS_USER="vagrant"/' /etc/default/hhvm
+RUN sed -i 's/#RUN_AS_USER="www-data"/RUN_AS_USER="lighthouse/' /etc/default/hhvm
 RUN service hhvm start
 
 RUN update-rc.d hhvm defaults
@@ -87,44 +82,44 @@ RUN echo "xdebug.remote_connect_back = 1" >> /etc/php5/fpm/conf.d/20-xdebug.ini
 RUN echo "xdebug.remote_port = 9000" >> /etc/php5/fpm/conf.d/20-xdebug.ini
 RUN echo "xdebug.max_nesting_level = 512" >> /etc/php5/fpm/conf.d/20-xdebug.ini
 
-RUN cat > /etc/nginx/fastcgi_params << EOF
-fastcgi_param	QUERY_STRING		\$query_string;
-fastcgi_param	REQUEST_METHOD		\$request_method;
-fastcgi_param	CONTENT_TYPE		\$content_type;
-fastcgi_param	CONTENT_LENGTH		\$content_length;
-fastcgi_param	SCRIPT_FILENAME		\$request_filename;
-fastcgi_param	SCRIPT_NAME		\$fastcgi_script_name;
-fastcgi_param	REQUEST_URI		\$request_uri;
-fastcgi_param	DOCUMENT_URI		\$document_uri;
-fastcgi_param	DOCUMENT_ROOT		\$document_root;
-fastcgi_param	SERVER_PROTOCOL		\$server_protocol;
-fastcgi_param	GATEWAY_INTERFACE	CGI/1.1;
-fastcgi_param	SERVER_SOFTWARE		nginx/\$nginx_version;
-fastcgi_param	REMOTE_ADDR		\$remote_addr;
-fastcgi_param	REMOTE_PORT		\$remote_port;
-fastcgi_param	SERVER_ADDR		\$server_addr;
-fastcgi_param	SERVER_PORT		\$server_port;
-fastcgi_param	SERVER_NAME		\$server_name;
-fastcgi_param	HTTPS			\$https if_not_empty;
-fastcgi_param	REDIRECT_STATUS		200;
-EOF
+RUN echo " \n\
+fastcgi_param	QUERY_STRING		\$query_string; \n\
+fastcgi_param	REQUEST_METHOD		\$request_method; \n\
+fastcgi_param	CONTENT_TYPE		\$content_type; \n\
+fastcgi_param	CONTENT_LENGTH		\$content_length; \n\
+fastcgi_param	SCRIPT_FILENAME		\$request_filename; \n\
+fastcgi_param	SCRIPT_NAME		    \$fastcgi_script_name; \n\
+fastcgi_param	REQUEST_URI		    \$request_uri; \n\
+fastcgi_param	DOCUMENT_URI		\$document_uri; \n\
+fastcgi_param	DOCUMENT_ROOT		\$document_root; \n\
+fastcgi_param	SERVER_PROTOCOL		\$server_protocol; \n\
+fastcgi_param	GATEWAY_INTERFACE	CGI/1.1; \n\
+fastcgi_param	SERVER_SOFTWARE		nginx/\$nginx_version; \n\
+fastcgi_param	REMOTE_ADDR		    \$remote_addr; \n\
+fastcgi_param	REMOTE_PORT		    \$remote_port; \n\
+fastcgi_param	SERVER_ADDR		    \$server_addr; \n\
+fastcgi_param	SERVER_PORT		    \$server_port; \n\
+fastcgi_param	SERVER_NAME		    \$server_name; \n\
+fastcgi_param	HTTPS			    \$https if_not_empty; \n\
+fastcgi_param	REDIRECT_STATUS		200; \n\
+" >> /etc/nginx/fastcgi_params
 
-RUN sed -i "s/user www-data;/user vagrant;/" /etc/nginx/nginx.conf
+RUN sed -i "s/user www-data;/user lighthouse;/" /etc/nginx/nginx.conf
 RUN sed -i "s/# server_names_hash_bucket_size.*/server_names_hash_bucket_size 64;/" /etc/nginx/nginx.conf
 
-RUN sed -i "s/user = www-data/user = vagrant/" /etc/php5/fpm/pool.d/www.conf
-RUN sed -i "s/group = www-data/group = vagrant/" /etc/php5/fpm/pool.d/www.conf
+RUN sed -i "s/user = www-data/user = lighthouse/" /etc/php5/fpm/pool.d/www.conf
+RUN sed -i "s/group = www-data/group = lighthouse/" /etc/php5/fpm/pool.d/www.conf
 
-RUN sed -i "s/listen\.owner.*/listen.owner = vagrant/" /etc/php5/fpm/pool.d/www.conf
-RUN sed -i "s/listen\.group.*/listen.group = vagrant/" /etc/php5/fpm/pool.d/www.conf
+RUN sed -i "s/listen\.owner.*/listen.owner = lighthouse/" /etc/php5/fpm/pool.d/www.conf
+RUN sed -i "s/listen\.group.*/listen.group = lighthouse/" /etc/php5/fpm/pool.d/www.conf
 RUN sed -i "s/;listen\.mode.*/listen.mode = 0666/" /etc/php5/fpm/pool.d/www.conf
 
 RUN service nginx restart
 RUN service php5-fpm restart
 
-RUN usermod -a -G www-data vagrant
-RUN id vagrant
-RUN groups vagrant
+RUN usermod -a -G www-data lighthouse
+RUN id lighthouse
+RUN groups lighthouse
 
 RUN apt-get install -y nodejs
 RUN /usr/bin/npm install -g grunt-cli
@@ -141,22 +136,14 @@ RUN sed -i '/^bind-address/s/bind-address.*=.*/bind-address = 0.0.0.0/' /etc/mys
 RUN mysql --user="root" --password="secret" -e "GRANT ALL ON *.* TO root@'0.0.0.0' IDENTIFIED BY 'secret' WITH GRANT OPTION;"
 RUN service mysql restart
 
-RUN mysql --user="root" --password="secret" -e "CREATE USER 'homestead'@'0.0.0.0' IDENTIFIED BY 'secret';"
-RUN mysql --user="root" --password="secret" -e "GRANT ALL ON *.* TO 'homestead'@'0.0.0.0' IDENTIFIED BY 'secret' WITH GRANT OPTION;"
-RUN mysql --user="root" --password="secret" -e "GRANT ALL ON *.* TO 'homestead'@'%' IDENTIFIED BY 'secret' WITH GRANT OPTION;"
+RUN mysql --user="root" --password="secret" -e "CREATE USER 'lighthouse'@'0.0.0.0' IDENTIFIED BY 'secret';"
+RUN mysql --user="root" --password="secret" -e "GRANT ALL ON *.* TO 'lighthouse'@'0.0.0.0' IDENTIFIED BY 'secret' WITH GRANT OPTION;"
+RUN mysql --user="root" --password="secret" -e "GRANT ALL ON *.* TO 'lighthouse'@'%' IDENTIFIED BY 'secret' WITH GRANT OPTION;"
 RUN mysql --user="root" --password="secret" -e "FLUSH PRIVILEGES;"
-RUN mysql --user="root" --password="secret" -e "CREATE DATABASE homestead;"
+RUN mysql --user="root" --password="secret" -e "CREATE DATABASE lighthouse;"
 RUN service mysql restart
 
 RUN mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql --user=root --password=secret mysql
-
-RUN apt-get install -y postgresql-9.4 postgresql-contrib-9.4
-
-RUN sed -i "s/#listen_addresses = 'localhost'/listen_addresses = '*'/g" /etc/postgresql/9.4/main/postgresql.conf
-RUN echo "host    all             all             10.0.2.2/32               md5" | tee -a /etc/postgresql/9.4/main/pg_hba.conf
-RUN sudo -u postgres psql -c "CREATE ROLE homestead LOGIN UNENCRYPTED PASSWORD 'secret' SUPERUSER INHERIT NOCREATEDB NOCREATEROLE NOREPLICATION;"
-RUN sudo -u postgres /usr/bin/createdb --echo --owner=homestead homestead
-RUN service postgresql restart
 
 RUN apt-get install -y blackfire-agent blackfire-php
 
@@ -173,7 +160,8 @@ RUN dd if=/dev/zero of=/EMPTY bs=1M
 RUN rm -f /EMPTY
 RUN sync
 
+VOLUME /usr/share/nginx/html
+VOLUME /etc/nginx
 
-
-
-
+EXPOSE 80 443
+CMD ["/bin/bash"]
