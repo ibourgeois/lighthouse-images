@@ -31,8 +31,8 @@ RUN apt-get update
 RUN apt-get install -y $buildDeps --no-install-recommends
 RUN rm -rf /var/lib/apt/lists/*
 
-RUN curl -SL "http://php.net/get/php-$PHP_VERSION.tar.xz/from/this/mirror" -o php.tar.xz
-RUN curl -SL "http://php.net/get/php-$PHP_VERSION.tar.xz.asc/from/this/mirror" -o php.tar.xz.asc
+RUN curl -SL "http://php.net/get/php-$PHP_VERSION.tar.xz/from/a/mirror" -o php.tar.xz
+RUN curl -SL "http://php.net/get/php-$PHP_VERSION.tar.xz.asc/from/a/mirror" -o php.tar.xz.asc
 RUN gpg --verify php.tar.xz.asc
 RUN mkdir -p /usr/src/php 
 RUN tar -xof php.tar.xz -C /usr/src/php --strip-components=1
