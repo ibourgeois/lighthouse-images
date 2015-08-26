@@ -6,7 +6,7 @@ RUN echo "deb http://nginx.org/packages/mainline/ubuntu/ trusty nginx" >> /etc/a
 
 ENV NGINX_VERSION 1.9.4-1~trusty
 
-RUN apt-get update && \
+RUN apt-get update
 RUN apt-get install -y nginx=${NGINX_VERSION}
 RUN rm -rf /var/lib/apt/lists/*
 
