@@ -56,7 +56,7 @@ RUN { find /usr/local/bin /usr/local/sbin -type f -executable -exec strip --stri
 RUN apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false -o APT::AutoRemove::SuggestsImportant=false $buildDeps
 RUN make clean
 
-COPY docker-php-ext-* /usr/local/bin/
+COPY php-ext-* /usr/local/bin/
 
 WORKDIR /var/www/html
 COPY php-fpm.conf /usr/local/etc/
