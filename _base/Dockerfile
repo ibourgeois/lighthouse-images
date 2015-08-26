@@ -8,6 +8,10 @@ RUN apt-get upgrade -y
 #   - ibourgeois/mysql
 RUN apt-get install -y perl --no-install-recommends 
 
+# Install CA-Certificates for:
+#   - ibourgeois/nginx
+RUN apt-get install -y ca-certificates
+
 RUN rm -rf /var/lib/apt/lists/*
 
 CMD ["/bin/bash"]
